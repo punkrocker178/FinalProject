@@ -46,7 +46,7 @@ public class Publisher implements Serializable {
     @Size(min = 1, max = 2147483647)
     @Column(name = "publisher_name", nullable = false, length = 2147483647)
     private String publisherName;
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "publisherId")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "publisher")
     private Collection<Book> bookCollection;
 
     public Publisher() {

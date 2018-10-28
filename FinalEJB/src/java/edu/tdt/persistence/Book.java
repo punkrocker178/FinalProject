@@ -56,7 +56,7 @@ public class Book implements Serializable {
     private Collection<Author> authorCollection;
     @JoinColumn(name = "publisher_id", referencedColumnName = "publisher_id", nullable = false)
     @ManyToOne(optional = false)
-    private Publisher publisherId;
+    private Publisher publisher;
 
     public Book() {
     }
@@ -104,12 +104,12 @@ public class Book implements Serializable {
         this.authorCollection = authorCollection;
     }
 
-    public Publisher getPublisherId() {
-        return publisherId;
+    public Publisher getPublisher() {
+        return publisher;
     }
 
-    public void setPublisherId(Publisher publisherId) {
-        this.publisherId = publisherId;
+    public void setPublisher(Publisher publisher) {
+        this.publisher = publisher;
     }
 
     @Override
