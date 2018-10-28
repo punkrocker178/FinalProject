@@ -9,9 +9,9 @@ import javax.persistence.metamodel.StaticMetamodel;
 @StaticMetamodel(Book.class)
 public abstract class Book_ {
 
-	public static volatile SingularAttribute<Book, Publisher> publisherId;
 	public static volatile CollectionAttribute<Book, Author> authorCollection;
 	public static volatile SingularAttribute<Book, Integer> price;
+	public static volatile SingularAttribute<Book, Publisher> publisher;
 	public static volatile SingularAttribute<Book, String> bookName;
 	public static volatile SingularAttribute<Book, String> bookId;
 

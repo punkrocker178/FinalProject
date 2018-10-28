@@ -5,7 +5,6 @@
  */
 package edu.tdt.persistence;
 
-import static edu.tdt.persistence.Book_.bookName;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -70,12 +69,27 @@ public class BookStoreSession implements BookStoreSessionRemote {
         return entityManager.createNamedQuery("Book.findAll").getResultList();
     }
     
+    public List<Author> getAuthors(){
+        return entityManager.createNamedQuery("Author.findAll").getResultList();
+    }
+    
     public List<Publisher> getPublishers(){
         return entityManager.createNamedQuery("Publisher.findAll").getResultList();
     }
 
     public void removeBooks(String bookId){
        Book book = entityManager.find(Book.class, bookId);
+       //Xóa danh sách Book_Author rồi mới xóa xách khỏi DB
+       List<Author> authorsList = (List<Author>) book.getAuthorCollection();
+       for(Author author : authorsList){
+           List<Book> booksList = (List<Book>) author.getBookCollection();
+           for(Book bookToBeDeleted : booksList){
+               if(bookToBeDeleted.equals(book)){
+                   booksList.remove(bookToBeDeleted);
+                   break;
+               }
+           }
+       }
        entityManager.remove(book);
     }
     
@@ -85,7 +99,7 @@ public class BookStoreSession implements BookStoreSessionRemote {
             book.setBookName(input[0]);
         }
         if(!input[1].equals("")){
-            book.getPublisherId().setPublisherId(input[1]);
+            book.getPublisher().setPublisherId(input[1]);
         }
         if(!input[2].equals("")){
             book.setPrice(Integer.parseInt(input[2]));

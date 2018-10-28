@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.ejb.Remote;
 
-
 /**
  *
  * @author Steel
@@ -17,15 +16,28 @@ import javax.ejb.Remote;
 @Remote
 public interface BookStoreSessionRemote {
 //    Them thong tin vao database
+
     void addBook(Book book);
+
     void addAuthor(Author author);
+
     void addPublisher(Publisher publisher);
-    Book getBookById(String Id); 
-    void insertBookAuthor(String bookId,String authorId);
-    void removeBooks(String bookId);
-    void updateBook(String bookId,String[] input);
-    List<Publisher> getPublishers();
-    ArrayList<Author> getBookAuthors(String bookId);
-//    String getAllBooksNames();
+
+    Book getBookById(String Id);
+
     List<Book> getBooks();
+    
+    List<Author> getAuthors();
+
+    List<Publisher> getPublishers();
+
+    ArrayList<Author> getBookAuthors(String bookId);
+
+    void insertBookAuthor(String bookId, String authorId);
+
+    void removeBooks(String bookId);
+
+    void updateBook(String bookId, String[] input);
+
+//    String getAllBooksNames();
 }
