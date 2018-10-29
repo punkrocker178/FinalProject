@@ -9,6 +9,7 @@ import edu.tdt.persistence.Author;
 import edu.tdt.persistence.Book;
 import edu.tdt.persistence.BookStoreSessionRemote;
 import edu.tdt.persistence.Publisher;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -35,13 +36,14 @@ public class BookStoreEJBTester {
         System.out.println("Welcome to the Bookstore");
         System.out.println("===========================");
         System.out.print("Options: \n"
-                + "1. Add Book \n"
-                + "2. List All Books (Current Session) \n"
-                + "3. Find Book By Id \n"
-                + "4. List Book's Author(s)\n"
-                + "5. Remove Book By Id\n"
-                + "6. Assign author to book \n"
-                + "7. Edit Book information \n"
+                + "1. Add Book With New Author & Publisher \n"
+                + "2. Add Book With Existing Author & Publisher \n"
+                + "3. List All Books (Current Session) \n"
+                + "4. Find Book By Id \n"
+                + "5. List Book's Author(s)\n"
+                + "6. Remove Book By Id\n"
+                + "7. Assign author to book \n"
+                + "8. Edit Book information \n"
                 + "Enter Choice: ");
     }
 
@@ -77,8 +79,8 @@ public class BookStoreEJBTester {
 
     private void listAllBooks(BookStoreSessionRemote storeBean) {
         List<Book> booksList = storeBean.getBooks();
-        List<Publisher> publishersList = storeBean.getPublishers();
-        String format = "%-15s %-100s %-25s %s%n";
+        DecimalFormat df = new DecimalFormat("0,000,000VND");
+        String format = "%1$4s %2$50s %3$40s %4$15s %n";
         if (booksList.isEmpty()) {
             System.out.println("There is no book in the bookstore!\n");
         }
@@ -86,11 +88,12 @@ public class BookStoreEJBTester {
         System.out.println("Listing All Books In Bookstore");
         System.out.println("=================================");
         System.out.printf(format, "ID", "Name", "Publisher", "Price");
-        for (int i = 0; i < booksList.size(); i++) {
-            System.out.printf(format, booksList.get(i).getBookId(),
-                    booksList.get(i).getBookName(),
-                    booksList.get(i).getPublisher(),
-                    booksList.get(i).getPrice());
+        for (Book book : booksList) {
+                System.out.print(String.format("%1$-10s %2$-70.70s %3$-25s"
+                        ,book.getBookId(),book.getBookName()
+                ,book.getPublisher()));
+                System.out.print(new DecimalFormat("0,000 VND").format(book.getPrice()));
+                System.out.println("");
         }
         System.out.println();
     }
@@ -102,11 +105,46 @@ public class BookStoreEJBTester {
             showBookStoreGUI();
             choice = Integer.parseInt(sc.nextLine());
             Book book;
+            Publisher publisher;
+            Author author;
             String bookId, bookName, authorId, authorName, publisherId, publisherName;
+            int price;
             switch (choice) {
 //                Insert new user
                 case 1:
-                    // Add a book
+                    // Add a book with new Author & Publisher
+                    System.out.println("Enter bookId");
+                    bookId = sc.nextLine();
+                    System.out.print("Enter book name: ");
+                    bookName = sc.nextLine();
+                    System.out.println("Enter Publisher Id");
+                    publisherId = sc.nextLine();
+                    System.out.println("Enter Publisher Name");
+                    publisherName = sc.nextLine();
+                    System.out.println("Enter book price");
+                    price = sc.nextInt();
+                    sc.nextLine();
+                    System.out.println("How many authors are there?");
+                    int numOfAuthors = sc.nextInt();
+
+                    for(int i=0;i<numOfAuthors;i++){
+                        System.out.println("Enter the author's ID");
+                        authorId = sc.nextLine();
+                        System.out.println("Enter the author's name");
+                        authorName = sc.nextLine();
+                        storeBean.addAuthor(new Author(authorId,authorName));
+                    }
+                    
+                    publisher = new Publisher(publisherId, publisherName);
+                    book = new Book();
+                    book.setBookId(bookId);
+                    book.setBookName(bookName);
+                    book.setPublisher(publisher);
+                    book.setPrice(price);
+                    storeBean.addPublisher(publisher);
+                    storeBean.addBook(book);
+                    break;
+                case 2:
                     showAllPublishers(storeBean);
                     System.out.println("================================");
                     showAllAuthors(storeBean);
@@ -117,46 +155,43 @@ public class BookStoreEJBTester {
                     bookName = sc.nextLine();
                     System.out.println("Enter Publisher Id");
                     publisherId = sc.nextLine();
-                    System.out.println("Enter Publisher Name");
-                    publisherName = sc.nextLine();
                     System.out.println("Enter book price");
-                    int price = sc.nextInt();
-                    Publisher publisher = new Publisher(publisherId, publisherName);
-                    Book b = new Book();
-                    b.setBookId(bookId);
-                    b.setBookName(bookName);
-                    b.setPublisher(publisher);
-                    b.setPrice(price);
-                    storeBean.addPublisher(publisher);
-                    storeBean.addBook(b);
+                    price = sc.nextInt();
+                    publisher = storeBean.getPublisherById(publisherId);
+                    book = new Book();
+                    book.setBookId(bookId);
+                    book.setBookName(bookName);
+                    book.setPublisher(publisher);
+                    book.setPrice(price);
+                    storeBean.addBook(book);
                     break;
-                case 2:
+                case 3:
                     // Print all books (using current session bean)
                     listAllBooks(storeBean);
                     break;
-                case 3:
+                case 4:
                     //Find Book By Id
                     System.out.println("Enter book Id");
                     bookId = sc.nextLine();
                     book = storeBean.getBookById(bookId);
                     System.out.println(book);
                     break;
-                case 4:
+                case 5:
                     //List Author(s) of Book
                     System.out.println("Enter book Id");
                     bookId = sc.nextLine();
                     ArrayList<Author> authorsList = storeBean.getBookAuthors(bookId);
-                    for (Author author : authorsList) {
-                        System.out.println(author);
+                    for (Author authorsOfBook : authorsList) {
+                        System.out.println(authorsOfBook);
                     }
                     break;
-                case 5:
+                case 6:
                     //Remove book
                     System.out.println("Enter bookId");
                     bookId = sc.nextLine();
                     storeBean.removeBooks(bookId);
                     break;
-                case 6:
+                case 7:
                     //Assign author to book
                     System.out.println("Enter book Id");
                     bookId = sc.nextLine();
@@ -164,7 +199,7 @@ public class BookStoreEJBTester {
                     authorId = sc.nextLine();
                     storeBean.insertBookAuthor(bookId, authorId);
                     break;
-                case 7:
+                case 8:
                     //Edit Book information
                     String[] input = new String[3];
                     System.out.println("Enter bookId");
@@ -181,7 +216,7 @@ public class BookStoreEJBTester {
                     // Exit
                     break;
             }
-        } while (choice != 8);
+        } while (choice != 9);
 
     }
 

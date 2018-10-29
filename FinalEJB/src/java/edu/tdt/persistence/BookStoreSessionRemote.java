@@ -24,6 +24,8 @@ public interface BookStoreSessionRemote {
     void addPublisher(Publisher publisher);
 
     Book getBookById(String Id);
+    
+    Publisher getPublisherById(String Id);
 
     List<Book> getBooks();
     
