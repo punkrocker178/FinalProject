@@ -22,6 +22,8 @@ public interface BookStoreSessionRemote {
     void addAuthor(Author author);
 
     void addPublisher(Publisher publisher);
+    
+    void addReceipt(Receipt receipt);
 
     Book getBookById(String Id);
     
@@ -34,12 +36,17 @@ public interface BookStoreSessionRemote {
     List<Publisher> getPublishers();
 
     ArrayList<Author> getBookAuthors(String bookId);
+    
+    int insertReceiptBook(String receiptId, ArrayList<Book> checkedOutBooks,ArrayList<Integer> bookQty);
 
     void insertBookAuthor(String bookId, String authorId);
 
     void removeBooks(String bookId);
 
     void updateBook(String bookId, String[] input);
-
-//    String getAllBooksNames();
+    
+    void updateBookPrice(String bookId,int quantity);
+    
+    String autoID(char argument);
+    
 }

@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 /**
@@ -28,16 +29,49 @@ public class BookStoreSession implements BookStoreSessionRemote {
 
     @Override
     public void addBook(Book book) {
+        String bookId = autoID('B');
+        book.setBookId(bookId);
         entityManager.persist(book);
     }
 
     public void addPublisher(Publisher publisher) {
+        String publisherId = autoID('P');
+        publisher.setPublisherId(publisherId);
         entityManager.persist(publisher);
     }
 
     @Override
     public void addAuthor(Author author) {
+        String authorId = autoID('A');
+        author.setAuthorId(authorId);
         entityManager.persist(author);
+    }
+
+    public void addReceipt(Receipt receipt) {
+        String orderId = autoID('R');
+        receipt.setOrderId(orderId);
+        entityManager.persist(receipt);
+
+    }
+
+    public int insertReceiptBook(String orderId, ArrayList<Book> checkedOutBooks,ArrayList<Integer> bookQty) {
+        Receipt receipt = entityManager.find(Receipt.class, orderId);
+        String bookId;
+        int total = 0 , i = 0;
+       
+        for (Book book : checkedOutBooks) {
+            bookId = book.getBookId();
+            Book bookInDB = entityManager.find(Book.class, bookId);
+            bookInDB.getReceiptCollection().add(receipt);
+            receipt.getBookCollection().add(bookInDB);
+            
+            //Trừ số sách được lấy ra khỏi db
+            bookInDB.setQuantity(bookInDB.getQuantity() - bookQty.get(i));
+            total += book.getPrice() * bookQty.get(i);
+            i++;
+        }
+        receipt.setTotal(total);
+        return total;
     }
 
     public void insertBookAuthor(String bookId, String authorId) {
@@ -73,10 +107,10 @@ public class BookStoreSession implements BookStoreSessionRemote {
     public List<Author> getAuthors() {
         return entityManager.createNamedQuery("Author.findAll").getResultList();
     }
-    
-    public Publisher getPublisherById(String Id){
+
+    public Publisher getPublisherById(String Id) {
         return (Publisher) entityManager.createNamedQuery("Publisher.findByPublisherId")
-                .setParameter("publisherId",Id).getSingleResult();
+                .setParameter("publisherId", Id).getSingleResult();
     }
 
     public List<Publisher> getPublishers() {
@@ -112,14 +146,49 @@ public class BookStoreSession implements BookStoreSessionRemote {
         }
     }
 
-//    public String getAllBooksNames() {
-//        String s = "";
-//        List<Book> booksList = getBooks();
-//        for (int i = 0; i < booksList.size(); i++) {
-//            s = s+(i + 1) + "\t" + booksList.get(i)+"\n";
-//        }
-//        return s;
-//    }
-    // Add business logic below. (Right-click in editor and choose
-    // "Insert Code > Add Business Method")
+    public void updateBookPrice(String bookId, int quantity) {
+        Book book = entityManager.find(Book.class, bookId);
+        book.setQuantity(quantity);
+    }
+
+    @Override
+    public String autoID(char argument) {
+        String id = "";
+        try {
+            switch (argument) {
+                case 'A':
+                    id = entityManager.createNativeQuery("SELECT author_id FROM public.author\n"
+                            + "ORDER BY author_id DESC LIMIT 1").getSingleResult().toString();
+                    break;
+                case 'P':
+                    id = entityManager.createNativeQuery("SELECT publisher_id FROM public.publisher\n"
+                            + "ORDER BY publisher_id DESC LIMIT 1").getSingleResult().toString();
+                    break;
+                case 'B':
+                    id = entityManager.createNativeQuery("SELECT book_id FROM public.book\n"
+                            + "ORDER BY book_id DESC LIMIT 1").getSingleResult().toString();
+                    break;
+                case 'E':
+                    break;
+                case 'R':
+                    id = entityManager.createNativeQuery("SELECT order_id FROM public.receipt\n"
+                            + "ORDER BY order_id DESC LIMIT 1").getSingleResult().toString();
+                    break;
+            }
+            String[] num = id.split("\\D");
+            //increment digit part of an id
+            int digit = Integer.parseInt(num[1]) + 1;
+
+            if (digit < 10) {
+                id = argument + "00" + digit;
+            } else if (digit < 100) {
+                id = argument + "0" + digit;
+            } else if (digit > 100) {
+                id = argument + digit + "";
+            }
+        } catch (NoResultException e) {
+            return argument + "001";
+        }
+        return id;
+    }
 }

@@ -52,8 +52,8 @@ public class Publisher implements Serializable {
     public Publisher() {
     }
 
-    public Publisher(String publisherId) {
-        this.publisherId = publisherId;
+    public Publisher(String publisherName) {
+        this.publisherName = publisherName;
     }
 
     public Publisher(String publisherId, String publisherName) {

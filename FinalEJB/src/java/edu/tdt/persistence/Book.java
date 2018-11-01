@@ -12,6 +12,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
@@ -35,6 +36,15 @@ import javax.xml.bind.annotation.XmlTransient;
     , @NamedQuery(name = "Book.findByBookName", query = "SELECT b FROM Book b WHERE b.bookName = :bookName")
     , @NamedQuery(name = "Book.findByPrice", query = "SELECT b FROM Book b WHERE b.price = :price")})
 public class Book implements Serializable {
+
+    @JoinTable(name = "book_receipt", joinColumns = {
+        @JoinColumn(name = "book_id", referencedColumnName = "book_id", nullable = false)}, inverseJoinColumns = {
+        @JoinColumn(name = "order_id", referencedColumnName = "order_id", nullable = false)})
+    @ManyToMany
+    private Collection<Receipt> receiptCollection;
+
+    @Column(name = "quantity")
+    private Integer quantity;
 
     private static final long serialVersionUID = 1L;
     @Id
@@ -65,10 +75,17 @@ public class Book implements Serializable {
         this.bookId = bookId;
     }
 
-    public Book(String bookId, String bookName, int price) {
+    public Book(String bookId, String bookName, int price, int quantity) {
         this.bookId = bookId;
         this.bookName = bookName;
         this.price = price;
+        this.quantity = quantity;
+    }
+
+    public Book(String bookName, int price, int quantity) {
+        this.bookName = bookName;
+        this.price = price;
+        this.quantity = quantity;
     }
 
     public String getBookId() {
@@ -136,5 +153,22 @@ public class Book implements Serializable {
     public String toString() {
         return bookId + "\t" + bookName;
     }
-    
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    @XmlTransient
+    public Collection<Receipt> getReceiptCollection() {
+        return receiptCollection;
+    }
+
+    public void setReceiptCollection(Collection<Receipt> receiptCollection) {
+        this.receiptCollection = receiptCollection;
+    }
+
 }

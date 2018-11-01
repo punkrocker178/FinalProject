@@ -56,8 +56,8 @@ public class Author implements Serializable {
     public Author() {
     }
 
-    public Author(String authorId) {
-        this.authorId = authorId;
+    public Author(String authorName) {
+        this.authorName = authorName;
     }
 
     public Author(String authorId, String authorName) {
