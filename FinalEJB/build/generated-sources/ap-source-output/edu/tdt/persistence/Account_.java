@@ -11,6 +11,7 @@ public abstract class Account_ {
 
 	public static volatile SingularAttribute<Account, String> password;
 	public static volatile CollectionAttribute<Account, Role> roleCollection;
+	public static volatile CollectionAttribute<Account, StockInput> stockInputCollection;
 	public static volatile CollectionAttribute<Account, Receipt> receiptCollection;
 	public static volatile SingularAttribute<Account, String> username;
 

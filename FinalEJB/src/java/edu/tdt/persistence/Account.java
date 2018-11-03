@@ -36,6 +36,9 @@ import javax.xml.bind.annotation.XmlTransient;
 public class Account implements Serializable {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "username")
+    private Collection<StockInput> stockInputCollection;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "username")
     private Collection<Receipt> receiptCollection;
 
     private static final long serialVersionUID = 1L;
@@ -122,6 +125,15 @@ public class Account implements Serializable {
 
     public void setReceiptCollection(Collection<Receipt> receiptCollection) {
         this.receiptCollection = receiptCollection;
+    }
+
+    @XmlTransient
+    public Collection<StockInput> getStockInputCollection() {
+        return stockInputCollection;
+    }
+
+    public void setStockInputCollection(Collection<StockInput> stockInputCollection) {
+        this.stockInputCollection = stockInputCollection;
     }
 
 }

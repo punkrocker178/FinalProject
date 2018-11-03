@@ -12,6 +12,7 @@ public abstract class Book_ {
 	public static volatile SingularAttribute<Book, Integer> quantity;
 	public static volatile CollectionAttribute<Book, Author> authorCollection;
 	public static volatile SingularAttribute<Book, Integer> price;
+	public static volatile CollectionAttribute<Book, StockInput> stockInputCollection;
 	public static volatile SingularAttribute<Book, Publisher> publisher;
 	public static volatile CollectionAttribute<Book, Receipt> receiptCollection;
 	public static volatile SingularAttribute<Book, String> bookName;

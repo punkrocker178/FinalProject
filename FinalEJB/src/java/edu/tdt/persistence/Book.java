@@ -37,6 +37,12 @@ import javax.xml.bind.annotation.XmlTransient;
     , @NamedQuery(name = "Book.findByPrice", query = "SELECT b FROM Book b WHERE b.price = :price")})
 public class Book implements Serializable {
 
+    @JoinTable(name = "stock_input_book", joinColumns = {
+        @JoinColumn(name = "book_id", referencedColumnName = "book_id", nullable = false)}, inverseJoinColumns = {
+        @JoinColumn(name = "input_receipt_id", referencedColumnName = "input_receipt_id", nullable = false)})
+    @ManyToMany
+    private Collection<StockInput> stockInputCollection;
+
     @JoinTable(name = "book_receipt", joinColumns = {
         @JoinColumn(name = "book_id", referencedColumnName = "book_id", nullable = false)}, inverseJoinColumns = {
         @JoinColumn(name = "order_id", referencedColumnName = "order_id", nullable = false)})
@@ -169,6 +175,15 @@ public class Book implements Serializable {
 
     public void setReceiptCollection(Collection<Receipt> receiptCollection) {
         this.receiptCollection = receiptCollection;
+    }
+
+    @XmlTransient
+    public Collection<StockInput> getStockInputCollection() {
+        return stockInputCollection;
+    }
+
+    public void setStockInputCollection(Collection<StockInput> stockInputCollection) {
+        this.stockInputCollection = stockInputCollection;
     }
 
 }

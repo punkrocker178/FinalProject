@@ -3,8 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.tdt.persistence;
+package edu.tdt.bean;
 
+import edu.tdt.persistence.Author;
+import edu.tdt.persistence.Book;
+import edu.tdt.persistence.Publisher;
+import edu.tdt.persistence.Receipt;
 import java.util.ArrayList;
 import java.util.List;
 import javax.ejb.Remote;
@@ -44,8 +48,6 @@ public interface BookStoreSessionRemote {
     void removeBooks(String bookId);
 
     void updateBook(String bookId, String[] input);
-    
-    void updateBookPrice(String bookId,int quantity);
     
     String autoID(char argument);
     

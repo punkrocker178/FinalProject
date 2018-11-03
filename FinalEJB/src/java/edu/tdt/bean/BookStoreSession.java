@@ -3,8 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.tdt.persistence;
+package edu.tdt.bean;
 
+import edu.tdt.persistence.Author;
+import edu.tdt.persistence.Book;
+import edu.tdt.persistence.Publisher;
+import edu.tdt.persistence.Receipt;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -29,29 +33,20 @@ public class BookStoreSession implements BookStoreSessionRemote {
 
     @Override
     public void addBook(Book book) {
-        String bookId = autoID('B');
-        book.setBookId(bookId);
         entityManager.persist(book);
     }
 
     public void addPublisher(Publisher publisher) {
-        String publisherId = autoID('P');
-        publisher.setPublisherId(publisherId);
         entityManager.persist(publisher);
     }
 
     @Override
     public void addAuthor(Author author) {
-        String authorId = autoID('A');
-        author.setAuthorId(authorId);
         entityManager.persist(author);
     }
 
     public void addReceipt(Receipt receipt) {
-        String orderId = autoID('R');
-        receipt.setOrderId(orderId);
         entityManager.persist(receipt);
-
     }
 
     public int insertReceiptBook(String orderId, ArrayList<Book> checkedOutBooks,ArrayList<Integer> bookQty) {
@@ -144,11 +139,9 @@ public class BookStoreSession implements BookStoreSessionRemote {
         if (!input[2].equals("")) {
             book.setPrice(Integer.parseInt(input[2]));
         }
-    }
-
-    public void updateBookPrice(String bookId, int quantity) {
-        Book book = entityManager.find(Book.class, bookId);
-        book.setQuantity(quantity);
+        if(!input[3].equals("")){
+            book.setQuantity(Integer.parseInt(input[3]));
+        }
     }
 
     @Override
