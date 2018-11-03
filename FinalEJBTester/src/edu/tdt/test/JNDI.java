@@ -5,8 +5,8 @@
  */
 package edu.tdt.test;
 
-import edu.tdt.persistence.BookStoreSession;
-import edu.tdt.persistence.BookStoreSessionRemote;
+import edu.tdt.bean.BookStoreSession;
+import edu.tdt.bean.BookStoreSessionRemote;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
