@@ -115,7 +115,7 @@ public class Account implements Serializable {
 
     @Override
     public String toString() {
-        return "edu.tdt.persistence.Account[ username=" + username + " ]";
+        return this.username;
     }
 
     @XmlTransient

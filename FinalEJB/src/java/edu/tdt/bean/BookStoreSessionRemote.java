@@ -9,7 +9,9 @@ import edu.tdt.persistence.Author;
 import edu.tdt.persistence.Book;
 import edu.tdt.persistence.Publisher;
 import edu.tdt.persistence.Receipt;
+import edu.tdt.persistence.StockInput;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import javax.ejb.Remote;
 
@@ -28,6 +30,8 @@ public interface BookStoreSessionRemote {
     void addPublisher(Publisher publisher);
     
     void addReceipt(Receipt receipt);
+    
+    void addStockInputReceipt(StockInput stockIn);
 
     Book getBookById(String Id);
     
@@ -41,13 +45,19 @@ public interface BookStoreSessionRemote {
 
     ArrayList<Author> getBookAuthors(String bookId);
     
-    int insertReceiptBook(String receiptId, ArrayList<Book> checkedOutBooks,ArrayList<Integer> bookQty);
+    int insertReceiptBook(String receiptId, ArrayList<Book> checkedOutBooks);
+    
+    int insertStockReceiptBook(String stockInId,ArrayList<Book> newBooks,int[] bookBuyPrice);
 
     void insertBookAuthor(String bookId, String authorId);
 
     void removeBooks(String bookId);
 
     void updateBook(String bookId, String[] input);
+    
+    List<Receipt> viewReceipt(int days);
+    
+    List<Receipt> viewReceipt(String dateFrom,String dateTo);
     
     String autoID(char argument);
     

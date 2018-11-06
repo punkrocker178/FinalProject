@@ -11,8 +11,10 @@ import edu.tdt.persistence.Author;
 import edu.tdt.persistence.Book;
 import edu.tdt.persistence.Publisher;
 import edu.tdt.persistence.Receipt;
+import edu.tdt.persistence.StockInput;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -27,16 +29,25 @@ import java.util.Scanner;
 public class Functions {
 
     private BookStoreSessionRemote storeBean;
+
     private Scanner sc;
 
+    private Date date;
+
     public String format = "%1$-10s %2$-70.70s %3$-25s %4$s %n";
+    
+    public String formatTotal = "%-105s %s%n";
 
     //Sách khách đem ra quầy thanh toán
     private ArrayList<Book> checkedOutBooks = new ArrayList<Book>();
-    //Số lượng của những quyển sách đó
-    private ArrayList<Integer> bookQty = new ArrayList();
 
-    public DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
+    private ArrayList<Book> newBooks = new ArrayList<Book>();
+
+    private ArrayList<String> authorIdList;
+
+    private ArrayList<ArrayList> authorsOfNewBooks = new ArrayList();
+
+    public DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 
     private UI ui = new UI();
 
@@ -90,14 +101,19 @@ public class Functions {
                         book.setPublisher(publisher);
                         book.setBookId(bookId);
                         storeBean.addPublisher(publisher);
-                        storeBean.addBook(book);
+//                        storeBean.addBook(book);
                         for (int i = 0; i < numOfAuthors; i++) {
+                            authorIdList = new ArrayList();
                             authorId = storeBean.autoID('A');
                             System.out.println("Enter the author's name");
                             authorName = sc.nextLine();
-                            storeBean.addAuthor(new Author(authorId, authorName));
-                            storeBean.insertBookAuthor(bookId, authorId);
+                            author = new Author(authorId, authorName);
+                            storeBean.addAuthor(author);
+                            authorIdList.add(authorId);
+//                            storeBean.insertBookAuthor(bookId, authorId);
                         }
+                        newBooks.add(book);
+                        authorsOfNewBooks.add(authorIdList);
                         break;
                     case 2:
                         // Add a book with existing Author & Publisher
@@ -120,15 +136,19 @@ public class Functions {
                         book = new Book(bookName, price, quantity);
                         book.setBookId(bookId);
                         book.setPublisher(publisher);
-                        storeBean.addBook(book);
+//                        storeBean.addBook(book);
                         System.out.println("How many authors are there?");
                         numOfAuthors = sc.nextInt();
                         sc.nextLine();
                         for (int i = 0; i < numOfAuthors; i++) {
+                            authorIdList = new ArrayList();
                             System.out.println("Enter author's ID ");
                             authorId = sc.nextLine();
-                            storeBean.insertBookAuthor(bookId, authorId);
+                            authorIdList.add(authorId);
+//                            storeBean.insertBookAuthor(bookId, authorId);
                         }
+                        newBooks.add(book);
+                        authorsOfNewBooks.add(authorIdList);
                         break;
                     case 3:
                         //Add author
@@ -192,11 +212,29 @@ public class Functions {
                         input[3] = sc.nextLine();
                         storeBean.updateBook(bookId, input);
                         break;
+                    case 11:
+                        //Stock input
+                        System.out.println("Newly added books");
+                        int i = 0;
+                        for (Book nBook : newBooks) {
+//                            int qty = bookQty.get(i);
+                            System.out.printf(format, nBook.getBookId(),
+                                    nBook.getBookName(),
+                                    nBook.getQuantity(),
+                                    new DecimalFormat("0,000 VND").format(nBook.getPrice()));
+                        }
+                        addBooksToDB(newBooks,
+                                new Account("hieu178", "81dc9bdb52d04dc20036dbd8313ed055"), storeBean);
+                        newBooks.removeAll(newBooks);
+                        break;
+                    case 12:
+                        listAllBooks(storeBean);
+                        break;
                     default:
                         // Exit
                         break;
                 }
-            } while (choice < 12 && choice > 0);
+            } while (choice < 13 && choice > 0);
         } catch (NumberFormatException e) {
             System.err.println("Please input an integer!");
         }
@@ -204,23 +242,13 @@ public class Functions {
 
     void salesFunctions(BookStoreSessionRemote storeBean) {
         sc = new Scanner(System.in, "ISO-8859-1");
-        ArrayList<Book> checkedOutBooks = new ArrayList<Book>();
         int choice = 0;
         try {
             do {
                 ui.showBookStoreUI();
                 choice = Integer.parseInt(sc.nextLine());
                 Book book;
-                Publisher publisher;
-                Author author;
                 String bookId;
-                String bookName;
-                String authorId;
-                String authorName;
-                String publisherId;
-                String publisherName;
-                int price;
-                int quantity;
                 switch (choice) {
                     case 1:
                         // Print all books (using current session bean)
@@ -239,7 +267,7 @@ public class Functions {
                             System.out.println("How many?");
                             int numBooks = sc.nextInt();
                             sc.nextLine();
-                            bookQty.add(numBooks);
+                            book.setQuantity(numBooks);
                             checkedOutBooks.add(book);
                         } else {
                             System.out.println("Could not add book");
@@ -262,24 +290,41 @@ public class Functions {
                         ui.header("ckBooks");
                         System.out.printf(format, "ID", "Name", "Publisher", "Price");
                         for (Book chkedOutBook : checkedOutBooks) {
-                            System.out.printf(format, chkedOutBook.getBookId(), chkedOutBook.getBookName(), chkedOutBook.getPublisher(), new DecimalFormat("0,000 VND").format(chkedOutBook.getPrice()));
+                            System.out.printf(format, chkedOutBook.getBookId(),
+                                    chkedOutBook.getBookName(),
+                                    chkedOutBook.getPublisher(),
+                                    new DecimalFormat("0,000 VND").format(chkedOutBook.getPrice()));
                         }
                         break;
                     case 5:
-                        if (bookQty.isEmpty() && checkedOutBooks.isEmpty()) {
+                        //Proceed to checkout
+                        if (checkedOutBooks.isEmpty()) {
                             System.out.println("No books to proceed payment!");
                             return;
                         }
-                        System.out.println("Books to be checked out");
+                        System.out.println("\nBooks to be checked out:");
+                        ui.doubleDash();
+                        System.out.printf(format, "ID", "Book Name", "Qty", "Price");
                         int i = 0;
                         for (Book chkedOutBook : checkedOutBooks) {
-                            int qty = bookQty.get(i);
-                            System.out.printf(format, chkedOutBook.getBookId(), chkedOutBook.getBookName(), qty, new DecimalFormat("0,000 VND").format(chkedOutBook.getPrice()));
+                            System.out.printf(format, chkedOutBook.getBookId(),
+                                    chkedOutBook.getBookName(),
+                                    chkedOutBook.getQuantity(),
+                                    new DecimalFormat("0,000 VND").format(chkedOutBook.getPrice()));
                         }
-                        total(checkedOutBooks, bookQty, new Account("hieu178", "81dc9bdb52d04dc20036dbd8313ed055"), storeBean);
+                        ui.doubleDash();
+                        total(checkedOutBooks,
+                                new Account("hieu178", "81dc9bdb52d04dc20036dbd8313ed055"), storeBean);
                         checkedOutBooks.removeAll(checkedOutBooks);
-                        bookQty.removeAll(bookQty);
                         break;
+                    case 6:
+                        //View Report
+                        ui.reportUI();
+                        System.out.println("Enter Choice:");
+                        choice = sc.nextInt();
+                        sc.nextLine();
+                        getReport(choice, storeBean);
+
                     default:
                         // Exit
                         break;
@@ -290,23 +335,51 @@ public class Functions {
         }
     }
 
-    private void total(ArrayList<Book> checkedOutBooks, ArrayList<Integer> bookQty, Account account, BookStoreSessionRemote storeBean) {
-        int total = 0;
-        Receipt receipt = new Receipt();
-        //        DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
-        Date date = new Date();
-        String receiptId = storeBean.autoID('R');
-        receipt.setUsername(account);
-        receipt.setDate(date);
-        storeBean.addReceipt(receipt);
-        total = storeBean.insertReceiptBook(receiptId, checkedOutBooks, bookQty);
-        System.out.println("The total is:" + total);
-        System.out.println("Customer's cash");
-        int cash = sc.nextInt();
-        sc.nextLine();
-        if (payment(total, cash)) {
-            printReceipt(checkedOutBooks, bookQty, date, account.getUsername(), total);
+    private void getReport(int choice, BookStoreSessionRemote storeBean) {
+        sc = new Scanner(System.in);
+        int total =0;
+        String strDateFrom, strDateTo;
+        List<Receipt> receiptsList;
+        switch (choice) {
+            case 1:
+                //7 days
+                receiptsList = storeBean.viewReceipt(7);
+                System.out.println("Viewing Report This Week");
+                viewReport(receiptsList);
+                break;
+            case 2:
+                //30 days
+                receiptsList = storeBean.viewReceipt(30);
+                System.out.println("Viewing Report This Month");
+                viewReport(receiptsList);
+                break;
+            case 3:
+                //Custom
+                System.out.println("From date:");
+                strDateFrom = sc.nextLine();
+                System.out.println("To date:");
+                strDateTo = sc.nextLine();
+                receiptsList = storeBean.viewReceipt(strDateFrom,strDateTo);
+                System.out.println("Viewing Report From : "+strDateFrom+" To : "
+                        +strDateTo);
+                viewReport(receiptsList);
+                break;
         }
+
+    }
+
+    private void viewReport(List<Receipt> receiptsList) {
+        ui.doubleDash();
+        int total=0;
+        System.out.printf(format,"ID","Date","Username","Total");
+        for (Receipt receipt : receiptsList) {
+            System.out.printf(format, receipt.getOrderId(), dateFormat.format(receipt.getDate()),
+                    receipt.getUsername(),
+                    receipt.getTotal());
+            total += receipt.getTotal();
+        }
+        System.out.printf(formatTotal,"Total income:",new DecimalFormat("0,000 VND").format(total));
+        ui.doubleDash();
     }
 
     private void showAllAuthors(BookStoreSessionRemote storeBean) {
@@ -321,6 +394,18 @@ public class Functions {
         System.out.println();
     }
 
+    private void showAllPublishers(BookStoreSessionRemote storeBean) {
+        List<Publisher> publishers = storeBean.getPublishers();
+        if (publishers.isEmpty()) {
+            System.out.println("There isn't any publisher in the Database!\n");
+        }
+        ui.header("publisher");
+        for (Publisher publisher : publishers) {
+            System.out.println(publisher.getPublisherId() + "\t" + publisher.getPublisherName());
+        }
+        System.out.println();
+    }
+
     private void listAllBooks(BookStoreSessionRemote storeBean) {
         List<Book> booksList = storeBean.getBooks();
         if (booksList.isEmpty()) {
@@ -329,20 +414,40 @@ public class Functions {
         ui.header("books");
         System.out.printf(format, "ID", "Name", "Publisher", "Price");
         for (Book book : booksList) {
-            System.out.printf(format, book.getBookId(), book.getBookName(), book.getPublisher(), new DecimalFormat("0,000 VND").format(book.getPrice()));
+            System.out.printf(format,
+                    book.getBookId(),
+                    book.getBookName(),
+                    book.getPublisher(),
+                    new DecimalFormat("0,000 VND").format(book.getPrice()));
         }
         System.out.println();
     }
 
-    private void printReceipt(ArrayList<Book> checkedkOutBooks, ArrayList<Integer> bookQty, Date date, String username, int total) {
+    private void printReceipt(ArrayList<Book> checkedkOutBooks, Date date, String username, int total) {
         int i = 0;
         ui.header("receipt");
         System.out.println(username + "\t" + dateFormat.format(date));
         System.out.println("-------------------------------------");
         System.out.printf(format, "ID", "Book Name", "Qty", "Price");
         for (Book book : checkedkOutBooks) {
-            int qty = bookQty.get(i);
-            System.out.printf(format, book.getBookId(), book.getBookName(), qty, new DecimalFormat("0,000 VND").format(book.getPrice()));
+            System.out.printf(format, book.getBookId(),
+                    book.getBookName(),
+                    book.getQuantity(),
+                    new DecimalFormat("0,000 VND").format(book.getPrice()));
+        }
+        System.out.printf(formatTotal, "Total:", new DecimalFormat("0,000 VND").format(total));
+    }
+
+    private void printStockInputReceipt(ArrayList<Book> newBooks, Date date, String name, int total) {
+        ui.header("receipt");
+        System.out.println(name + "\t" + dateFormat.format(date));
+        System.out.println("-------------------------------------");
+        System.out.printf(format, "ID", "Book Name", "Qty", "Price");
+        for (Book book : newBooks) {
+            System.out.printf(format, book.getBookId(),
+                    book.getBookName(),
+                    book.getQuantity(),
+                    new DecimalFormat("0,000 VND").format(book.getPrice()));
         }
         System.out.printf("%-105s %s%n", "Total:", new DecimalFormat("0,000 VND").format(total));
     }
@@ -358,16 +463,55 @@ public class Functions {
         return true;
     }
 
-    private void showAllPublishers(BookStoreSessionRemote storeBean) {
-        List<Publisher> publishers = storeBean.getPublishers();
-        if (publishers.isEmpty()) {
-            System.out.println("There isn't any publisher in the Database!\n");
+    private void total(ArrayList<Book> checkedOutBooks, Account account, BookStoreSessionRemote storeBean) {
+        int total = 0;
+        Receipt receipt = new Receipt();
+        //        DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
+        date = new Date();
+        String receiptId = storeBean.autoID('R');
+        receipt.setUsername(account);
+        receipt.setDate(date);
+        receipt.setOrderId(receiptId);
+        storeBean.addReceipt(receipt);
+        total = storeBean.insertReceiptBook(receiptId, checkedOutBooks);
+        System.out.println("The total is:" + total);
+        System.out.println("Customer's cash");
+        int cash = sc.nextInt();
+        sc.nextLine();
+        if (payment(total, cash)) {
+            printReceipt(checkedOutBooks, date, account.getUsername(), total);
         }
-        ui.header("publisher");
-        for (Publisher publisher : publishers) {
-            System.out.println(publisher.getPublisherId() + "\t" + publisher.getPublisherName());
+    }
+
+    private void addBooksToDB(ArrayList<Book> newBooks,
+            Account account, BookStoreSessionRemote storeBean) {
+        int[] bookBuyPrice = new int[newBooks.size()];
+        for (int i = 0; i < newBooks.size(); i++) {
+            bookBuyPrice[i] = newBooks.get(i).getPrice();
         }
-        System.out.println();
+        addNewBooks(newBooks);
+        int total = 0;
+        StockInput stockReceipt = new StockInput();
+        date = new Date();
+        String stockInId = storeBean.autoID('S');
+        stockReceipt.setUsername(account);
+        stockReceipt.setDate(date);
+        stockReceipt.setInputReceiptId(stockInId);
+        storeBean.addStockInputReceipt(stockReceipt);
+        total = storeBean.insertStockReceiptBook(stockInId, newBooks, bookBuyPrice);
+        printStockInputReceipt(newBooks, date, account.getUsername(), total);
+    }
+
+    private void addNewBooks(ArrayList<Book> newBooks) {
+        int i = 0;
+        for (Book book : newBooks) {
+            storeBean.addBook(book);
+            authorIdList = authorsOfNewBooks.get(i);
+            for (int j = 0; j < authorIdList.size(); j++) {
+                storeBean.insertBookAuthor(book.getBookId(), authorIdList.get(j));
+            }
+            i++;
+        }
     }
 
 }

@@ -38,9 +38,9 @@ public class UI {
                 System.out.println("=================================");
                 break;
             case "receipt" :
-                System.out.println("\n==================================");
+                System.out.println("\n===================================");
                 System.out.println("\tReceipt");
-                System.out.println("=================================");
+                System.out.println("===================================");
                 break;
         }
     }
@@ -57,8 +57,10 @@ public class UI {
                 + "6. List Book's Author(s)\n"
                 + "7. Find Book By Id \n"
                 + "8. Remove Book By Id\n"
-                + "9. Assign author to book \n"
+                + "9. Assign Author To Book \n"
                 + "10. Edit Book's information \n"
+                + "11. Add New Books To Database\n"
+                + "12. List All Books\n"
                 + "Enter Choice: ");
     }
 
@@ -84,6 +86,20 @@ public class UI {
                 + "3. List Book's Author(s)\n"
                 + "4. List All Checked Out Book(s) \n"
                 + "5. Checkout \n"
+                + "6. View Report \n"
                 + "Enter Choice: ");
+    }
+    
+    public void reportUI(){
+        doubleDash();
+        System.out.println("View Reports By:");
+        System.out.println("1. This Week");
+        System.out.println("2. This Month");
+        System.out.println("3. Custom Time Range");
+        doubleDash();
+    }
+    
+    public void doubleDash(){
+        System.out.println("=================================");
     }
 }

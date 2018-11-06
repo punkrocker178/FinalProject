@@ -9,9 +9,12 @@ import edu.tdt.persistence.Author;
 import edu.tdt.persistence.Book;
 import edu.tdt.persistence.Publisher;
 import edu.tdt.persistence.Receipt;
+import edu.tdt.persistence.StockInput;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -49,21 +52,40 @@ public class BookStoreSession implements BookStoreSessionRemote {
         entityManager.persist(receipt);
     }
 
-    public int insertReceiptBook(String orderId, ArrayList<Book> checkedOutBooks,ArrayList<Integer> bookQty) {
+    public void addStockInputReceipt(StockInput stockIn) {
+        entityManager.persist(stockIn);
+    }
+
+    public int insertStockReceiptBook(String inputReceiptId, ArrayList<Book> newBooks, int[] bookBuyPrice) {
+        StockInput stockReceipt = entityManager.find(StockInput.class, inputReceiptId);
+        int total = 0, i = 0;
+        String bookId;
+        for (Book book : newBooks) {
+            bookId = book.getBookId();
+            Book bookInDB = entityManager.find(Book.class, bookId);
+            bookInDB.getStockInputCollection().add(stockReceipt);
+            stockReceipt.getBookCollection().add(bookInDB);
+            total += bookBuyPrice[i] * book.getQuantity();
+            i++;
+        }
+        stockReceipt.setPrice(total);
+        return total;
+    }
+
+    public int insertReceiptBook(String orderId, ArrayList<Book> checkedOutBooks) {
         Receipt receipt = entityManager.find(Receipt.class, orderId);
         String bookId;
-        int total = 0 , i = 0;
-       
+        int total = 0;
+
         for (Book book : checkedOutBooks) {
             bookId = book.getBookId();
             Book bookInDB = entityManager.find(Book.class, bookId);
             bookInDB.getReceiptCollection().add(receipt);
             receipt.getBookCollection().add(bookInDB);
-            
+
             //Trừ số sách được lấy ra khỏi db
-            bookInDB.setQuantity(bookInDB.getQuantity() - bookQty.get(i));
-            total += book.getPrice() * bookQty.get(i);
-            i++;
+            bookInDB.setQuantity(bookInDB.getQuantity() - book.getQuantity());
+            total += book.getPrice() * book.getQuantity();
         }
         receipt.setTotal(total);
         return total;
@@ -139,7 +161,7 @@ public class BookStoreSession implements BookStoreSessionRemote {
         if (!input[2].equals("")) {
             book.setPrice(Integer.parseInt(input[2]));
         }
-        if(!input[3].equals("")){
+        if (!input[3].equals("")) {
             book.setQuantity(Integer.parseInt(input[3]));
         }
     }
@@ -153,19 +175,28 @@ public class BookStoreSession implements BookStoreSessionRemote {
                     id = entityManager.createNativeQuery("SELECT author_id FROM public.author\n"
                             + "ORDER BY author_id DESC LIMIT 1").getSingleResult().toString();
                     break;
-                case 'P':
-                    id = entityManager.createNativeQuery("SELECT publisher_id FROM public.publisher\n"
-                            + "ORDER BY publisher_id DESC LIMIT 1").getSingleResult().toString();
-                    break;
+
                 case 'B':
                     id = entityManager.createNativeQuery("SELECT book_id FROM public.book\n"
                             + "ORDER BY book_id DESC LIMIT 1").getSingleResult().toString();
                     break;
+
                 case 'E':
                     break;
+
+                case 'P':
+                    id = entityManager.createNativeQuery("SELECT publisher_id FROM public.publisher\n"
+                            + "ORDER BY publisher_id DESC LIMIT 1").getSingleResult().toString();
+                    break;
+
                 case 'R':
                     id = entityManager.createNativeQuery("SELECT order_id FROM public.receipt\n"
                             + "ORDER BY order_id DESC LIMIT 1").getSingleResult().toString();
+                    break;
+
+                case 'S':
+                    id = entityManager.createNativeQuery("SELECT input_receipt_id FROM public.stock_input\n"
+                            + "ORDER BY input_receipt_id DESC LIMIT 1").getSingleResult().toString();
                     break;
             }
             String[] num = id.split("\\D");
@@ -184,4 +215,20 @@ public class BookStoreSession implements BookStoreSessionRemote {
         }
         return id;
     }
+
+    public List<Receipt> viewReceipt(int days) {
+        return entityManager.createNativeQuery("SELECT order_id, date, username, total\n"
+                + "FROM public.receipt WHERE date >= current_date - integer '"+days+"'",Receipt.class).getResultList(); 
+    }
+
+    public List<Receipt> viewReceipt(String dateFrom, String dateTo) {
+        List<Receipt> receiptList = entityManager.createNativeQuery(
+                "SELECT order_id, date, username, total\n"
+                + "FROM public.receipt\n"
+                + "WHERE date>=to_date(:dateFrom,'dd/MM/yyyy')\n"
+                + "AND date <= to_date(:dateTo,'dd/MM/yyyy')",Receipt.class)
+                .setParameter("dateFrom", dateFrom).setParameter("dateTo", dateTo).getResultList();
+        return receiptList;
+    }
+
 }
