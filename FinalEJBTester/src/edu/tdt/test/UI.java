@@ -7,6 +7,7 @@ package edu.tdt.test;
 
 /**
  * Hiện lựa chọn trong console
+ *
  * @author Steel
  */
 public class UI {
@@ -37,9 +38,21 @@ public class UI {
                 System.out.println("Listing All Books In Check Out List");
                 System.out.println("=================================");
                 break;
-            case "receipt" :
+            case "receipt":
                 System.out.println("\n===================================");
                 System.out.println("\tReceipt");
+                System.out.println("===================================");
+                break;
+            case "accounts":
+                System.out.println("\n===================================");
+                System.out.println("Listing All Accounts By Role");
+                System.out.println("===================================");
+                break;
+            case "roles":
+                System.out.println("\n===================================");
+                System.out.println("1. Admin");
+                System.out.println("2. Cashier");
+                System.out.println("3. Warehouse Keeper");
                 System.out.println("===================================");
                 break;
         }
@@ -69,10 +82,11 @@ public class UI {
         System.out.println("Welcome to the Bookstore");
         System.out.println("===========================");
         System.out.print("Options: \n"
-                + "1. Add user \n"
-                + "2. Add role \n"
-                + "3. Insert user to existing role\n"
-                + "4. View Report\n"
+                + "1. Add Account \n"
+                + "2. Add Role \n"
+                + "3. Search Accounts by Role\n"
+                + "4. Insert Account to existing Role\n"
+                + "5. View Report \n"
                 + "Enter Choice: ");
     }
 
@@ -89,8 +103,8 @@ public class UI {
                 + "6. View Report \n"
                 + "Enter Choice: ");
     }
-    
-    public void reportUI(){
+
+    public void reportUI() {
         doubleDash();
         System.out.println("View Reports By:");
         System.out.println("1. This Week");
@@ -98,8 +112,8 @@ public class UI {
         System.out.println("3. Custom Time Range");
         doubleDash();
     }
-    
-    public void doubleDash(){
+
+    public void doubleDash() {
         System.out.println("=================================");
     }
 }

@@ -35,7 +35,7 @@ import javax.xml.bind.annotation.XmlTransient;
     , @NamedQuery(name = "Book.findByBookId", query = "SELECT b FROM Book b WHERE b.bookId = :bookId")
     , @NamedQuery(name = "Book.findByBookName", query = "SELECT b FROM Book b WHERE b.bookName = :bookName")
     , @NamedQuery(name = "Book.findByPrice", query = "SELECT b FROM Book b WHERE b.price = :price")})
-public class Book implements Serializable {
+public class Book implements Serializable,Comparable<Book> {
 
     @JoinTable(name = "stock_input_book", joinColumns = {
         @JoinColumn(name = "book_id", referencedColumnName = "book_id", nullable = false)}, inverseJoinColumns = {
@@ -153,6 +153,19 @@ public class Book implements Serializable {
             return false;
         }
         return true;
+    }
+    
+    public int compareTo(Book b){
+        String id1 = this.getBookId();
+        String id2 = b.getBookId();
+        String[] i1 = id1.split("\\D");
+        String[] i2 = id2.split("\\D");
+        if(Integer.parseInt(i1[1])>Integer.parseInt(i2[1])){
+            return 1;
+        }else if(Integer.parseInt(i1[1])==Integer.parseInt(i2[1])){
+            return 0;
+        }
+        return -1;
     }
 
     @Override

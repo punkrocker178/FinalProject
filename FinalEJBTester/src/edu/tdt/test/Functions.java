@@ -6,17 +6,20 @@
 package edu.tdt.test;
 
 import edu.tdt.bean.BookStoreSessionRemote;
+import edu.tdt.bean.SystemManagementRemote;
 import edu.tdt.persistence.Account;
 import edu.tdt.persistence.Author;
 import edu.tdt.persistence.Book;
 import edu.tdt.persistence.Publisher;
 import edu.tdt.persistence.Receipt;
+import edu.tdt.persistence.Role;
 import edu.tdt.persistence.StockInput;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
@@ -30,12 +33,16 @@ public class Functions {
 
     private BookStoreSessionRemote storeBean;
 
+    private SystemManagementRemote session;
+
     private Scanner sc;
 
     private Date date;
 
     public String format = "%1$-10s %2$-70.70s %3$-25s %4$s %n";
-    
+
+    public String formatBook = "%1$-10s %2$-70.70s %3$-25s %4$-20s %5$s %n";
+
     public String formatTotal = "%-105s %s%n";
 
     //Sách khách đem ra quầy thanh toán
@@ -57,6 +64,73 @@ public class Functions {
 
     public Functions(BookStoreSessionRemote storeBean) {
         this.storeBean = storeBean;
+    }
+
+    void adminFunctions(SystemManagementRemote session, BookStoreSessionRemote storeBean) {
+        sc = new Scanner(System.in);
+        int choice = 0;
+        try {
+            do {
+                ui.showAdminUI();
+                choice = Integer.parseInt(sc.nextLine());
+                Account user;
+                Role role;
+                String username, password, rolename;
+
+                switch (choice) {
+                    case 1:
+                        //Add Account
+                        System.out.println("Enter username");
+                        username = sc.nextLine();
+                        System.out.println("Enter password");
+                        password = sc.nextLine();
+                        System.out.print("Enter role name : ");
+                        rolename = sc.nextLine();
+                        session.insertAccount(username, password);
+                        session.insertAccountRole(username, rolename);
+                        System.out.println("Done!");
+                        break;
+                    case 2:
+                        System.out.print("Enter role: ");
+                        rolename = sc.nextLine();
+                        session.insertRole(rolename);
+                        System.out.println("Done!");
+                        //Add Role
+                        break;
+                    case 3:
+                        //Search account by role
+                        ui.header("roles");
+                        System.out.print("Enter choice: ");
+                        choice = sc.nextInt();
+                        sc.nextLine();
+                        rolename = roleChoice(choice);
+                        ui.header("accounts");
+                        for (String s : session.searchRole(rolename)) {
+                            System.out.println(s);
+                        }
+                        System.out.println("Done!");
+                        break;
+                    case 4:
+                        //Insert role to existing account
+                        System.out.println("Enter username");
+                        username = sc.nextLine();
+                        System.out.println("Enter role name");
+                        rolename = sc.nextLine();
+                        session.insertAccountRole(username, rolename);
+                        break;
+                    case 5:
+                        //View Report
+                        ui.reportUI();
+                        System.out.println("Enter Choice:");
+                        choice = sc.nextInt();
+                        sc.nextLine();
+                        getReport(choice, storeBean);
+                        break;
+                }
+            } while (choice < 5 && choice > 0);
+        } catch (NumberFormatException e) {
+            System.err.println("Please input an integer!");
+        }
     }
 
     void warehouseFunctions(BookStoreSessionRemote storeBean) {
@@ -288,11 +362,11 @@ public class Functions {
                             System.out.println("There is no book in the check out list!\n");
                         }
                         ui.header("ckBooks");
-                        System.out.printf(format, "ID", "Name", "Publisher", "Price");
+                        System.out.printf(format, "ID", "Name", "Qty", "Price");
                         for (Book chkedOutBook : checkedOutBooks) {
                             System.out.printf(format, chkedOutBook.getBookId(),
                                     chkedOutBook.getBookName(),
-                                    chkedOutBook.getPublisher(),
+                                    chkedOutBook.getQuantity(),
                                     new DecimalFormat("0,000 VND").format(chkedOutBook.getPrice()));
                         }
                         break;
@@ -337,7 +411,7 @@ public class Functions {
 
     private void getReport(int choice, BookStoreSessionRemote storeBean) {
         sc = new Scanner(System.in);
-        int total =0;
+        int total = 0;
         String strDateFrom, strDateTo;
         List<Receipt> receiptsList;
         switch (choice) {
@@ -359,9 +433,9 @@ public class Functions {
                 strDateFrom = sc.nextLine();
                 System.out.println("To date:");
                 strDateTo = sc.nextLine();
-                receiptsList = storeBean.viewReceipt(strDateFrom,strDateTo);
-                System.out.println("Viewing Report From : "+strDateFrom+" To : "
-                        +strDateTo);
+                receiptsList = storeBean.viewReceipt(strDateFrom, strDateTo);
+                System.out.println("Viewing Report From : " + strDateFrom + " To : "
+                        + strDateTo);
                 viewReport(receiptsList);
                 break;
         }
@@ -370,16 +444,42 @@ public class Functions {
 
     private void viewReport(List<Receipt> receiptsList) {
         ui.doubleDash();
-        int total=0;
-        System.out.printf(format,"ID","Date","Username","Total");
+        int total = 0;
+        List<List<Book>> receiptBook = new ArrayList();
+        List<Book> booksFromReceipt = new ArrayList();
+        List<Book> sortedBooks = new ArrayList();
+
+        System.out.printf(format, "ID", "Date", "Username", "Total");
+        Collections.sort(receiptsList);
         for (Receipt receipt : receiptsList) {
             System.out.printf(format, receipt.getOrderId(), dateFormat.format(receipt.getDate()),
                     receipt.getUsername(),
-                    receipt.getTotal());
+                    new DecimalFormat("0,000 VND").format(receipt.getTotal()));
             total += receipt.getTotal();
+            booksFromReceipt = storeBean.getBooksFromReceipt(receipt);
+            receiptBook.add(booksFromReceipt);
         }
-        System.out.printf(formatTotal,"Total income:",new DecimalFormat("0,000 VND").format(total));
+        System.out.printf(formatTotal, "Total income:", new DecimalFormat("0,000 VND").format(total));
         ui.doubleDash();
+        for (List<Book> list : receiptBook) {
+            booksFromReceipt = list;
+            for (Book book : booksFromReceipt) {
+                sortedBooks.add(book);
+            }
+        }
+        printSortedBooks(sortedBooks);
+    }
+
+    private void printSortedBooks(List<Book> sortedBooks) {
+        System.out.println("Books sold:");
+        System.out.printf(format, "ID", "Book Name", "Publisher", "Price");
+        Collections.sort(sortedBooks);
+        for (Book book : sortedBooks) {
+            System.out.printf(format, book.getBookId(),
+                    book.getBookName(),
+                    book.getPublisher(),
+                    new DecimalFormat("0,000 VND").format(book.getPrice()));
+        }
     }
 
     private void showAllAuthors(BookStoreSessionRemote storeBean) {
@@ -411,13 +511,15 @@ public class Functions {
         if (booksList.isEmpty()) {
             System.out.println("There is no book in the bookstore!\n");
         }
+        Collections.sort(booksList);
         ui.header("books");
-        System.out.printf(format, "ID", "Name", "Publisher", "Price");
+        System.out.printf(formatBook, "ID", "Name", "Publisher", "Quantity", "Price");
         for (Book book : booksList) {
-            System.out.printf(format,
+            System.out.printf(formatBook,
                     book.getBookId(),
                     book.getBookName(),
                     book.getPublisher(),
+                    book.getQuantity(),
                     new DecimalFormat("0,000 VND").format(book.getPrice()));
         }
         System.out.println();
@@ -429,6 +531,7 @@ public class Functions {
         System.out.println(username + "\t" + dateFormat.format(date));
         System.out.println("-------------------------------------");
         System.out.printf(format, "ID", "Book Name", "Qty", "Price");
+        Collections.sort(checkedkOutBooks);
         for (Book book : checkedkOutBooks) {
             System.out.printf(format, book.getBookId(),
                     book.getBookName(),
@@ -514,4 +617,15 @@ public class Functions {
         }
     }
 
+    public String roleChoice(int choice) {
+        switch (choice) {
+            case 1:
+                return "admin";
+            case 2:
+                return "cashier";
+            case 3:
+                return "warehouse";
+        }
+        return "";
+    }
 }

@@ -37,7 +37,7 @@ import javax.xml.bind.annotation.XmlTransient;
     , @NamedQuery(name = "StockInput.findByInputReceiptId", query = "SELECT s FROM StockInput s WHERE s.inputReceiptId = :inputReceiptId")
     , @NamedQuery(name = "StockInput.findByDate", query = "SELECT s FROM StockInput s WHERE s.date = :date")
     , @NamedQuery(name = "StockInput.findByPrice", query = "SELECT s FROM StockInput s WHERE s.price = :price")})
-public class StockInput implements Serializable {
+public class StockInput implements Serializable,Comparable<StockInput> {
 
     private static final long serialVersionUID = 1L;
     @Id
@@ -135,6 +135,19 @@ public class StockInput implements Serializable {
     @Override
     public String toString() {
         return "edu.tdt.persistence.StockInput[ inputReceiptId=" + inputReceiptId + " ]";
+    }
+    
+    public int compareTo(StockInput s){
+        String id1 = this.getInputReceiptId();
+        String id2 = s.getInputReceiptId();
+        String[] i1 = id1.split("\\D");
+        String[] i2 = id2.split("\\D");
+        if(Integer.parseInt(i1[1])>Integer.parseInt(i2[1])){
+            return 1;
+        }else if(Integer.parseInt(i1[1])==Integer.parseInt(i2[1])){
+            return 0;
+        }
+        return -1;
     }
     
 }

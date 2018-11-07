@@ -216,9 +216,18 @@ public class BookStoreSession implements BookStoreSessionRemote {
         return id;
     }
 
+    public List<Book> getBooksFromReceipt(Receipt receipt) {
+        receipt = entityManager.merge(receipt);
+        List<Book> booksFromReceipt = new ArrayList<Book>();
+        for (Book book : receipt.getBookCollection()) {
+            booksFromReceipt.add(book);
+        }
+        return booksFromReceipt;
+    }
+
     public List<Receipt> viewReceipt(int days) {
         return entityManager.createNativeQuery("SELECT order_id, date, username, total\n"
-                + "FROM public.receipt WHERE date >= current_date - integer '"+days+"'",Receipt.class).getResultList(); 
+                + "FROM public.receipt WHERE date >= current_date - integer '" + days + "'", Receipt.class).getResultList();
     }
 
     public List<Receipt> viewReceipt(String dateFrom, String dateTo) {
@@ -226,7 +235,7 @@ public class BookStoreSession implements BookStoreSessionRemote {
                 "SELECT order_id, date, username, total\n"
                 + "FROM public.receipt\n"
                 + "WHERE date>=to_date(:dateFrom,'dd/MM/yyyy')\n"
-                + "AND date <= to_date(:dateTo,'dd/MM/yyyy')",Receipt.class)
+                + "AND date <= to_date(:dateTo,'dd/MM/yyyy')", Receipt.class)
                 .setParameter("dateFrom", dateFrom).setParameter("dateTo", dateTo).getResultList();
         return receiptList;
     }

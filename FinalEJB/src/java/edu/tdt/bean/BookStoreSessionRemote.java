@@ -55,6 +55,8 @@ public interface BookStoreSessionRemote {
 
     void updateBook(String bookId, String[] input);
     
+    List<Book> getBooksFromReceipt(Receipt receipt);
+    
     List<Receipt> viewReceipt(int days);
     
     List<Receipt> viewReceipt(String dateFrom,String dateTo);

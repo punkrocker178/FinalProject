@@ -37,7 +37,7 @@ import javax.xml.bind.annotation.XmlTransient;
     , @NamedQuery(name = "Receipt.findByOrderId", query = "SELECT r FROM Receipt r WHERE r.orderId = :orderId")
     , @NamedQuery(name = "Receipt.findByDate", query = "SELECT r FROM Receipt r WHERE r.date = :date")
     , @NamedQuery(name = "Receipt.findByTotal", query = "SELECT r FROM Receipt r WHERE r.total = :total")})
-public class Receipt implements Serializable {
+public class Receipt implements Serializable,Comparable<Receipt> {
 
     private static final long serialVersionUID = 1L;
     @Id
@@ -135,6 +135,19 @@ public class Receipt implements Serializable {
     @Override
     public String toString() {
         return "edu.tdt.persistence.Receipt[ orderId=" + orderId + " ]";
+    }
+    
+    public int compareTo(Receipt r){
+        String id1 = this.getOrderId();
+        String id2 = r.getOrderId();
+        String[] i1 = id1.split("\\D");
+        String[] i2 = id2.split("\\D");
+        if(Integer.parseInt(i1[1])>Integer.parseInt(i2[1])){
+            return 1;
+        }else if(Integer.parseInt(i1[1])==Integer.parseInt(i2[1])){
+            return 0;
+        }
+        return -1;
     }
     
 }

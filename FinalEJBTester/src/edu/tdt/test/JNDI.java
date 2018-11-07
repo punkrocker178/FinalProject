@@ -7,6 +7,8 @@ package edu.tdt.test;
 
 import edu.tdt.bean.BookStoreSession;
 import edu.tdt.bean.BookStoreSessionRemote;
+import edu.tdt.bean.SystemManagement;
+import edu.tdt.bean.SystemManagementRemote;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
@@ -18,14 +20,15 @@ import javax.naming.NamingException;
  * @author Steel
  */
 public class JNDI {
-     private Properties props;
+
+    private Properties props;
     private InitialContext ctx;
 
-    public JNDI() {
+    public JNDI(String path) {
         props = new Properties();
 
         try {
-            props.load(new FileInputStream("jndi.properties"));
+            props.load(new FileInputStream(path));
         } catch (IOException e) {
             System.err.println(e.toString());
         }
@@ -44,22 +47,22 @@ public class JNDI {
         String moduleName = "FinalEJB";
         String distinctName = "";
         String sessionBeanName = BookStoreSession.class.getSimpleName();
-        String viewClassName = BookStoreSessionRemote.class.getName()+"?stateful";
-        return "ejb:" + appName + "/" + moduleName + "/" + distinctName + "/" 
+        String viewClassName = BookStoreSessionRemote.class.getName() + "?stateful";
+        return "ejb:" + appName + "/" + moduleName + "/" + distinctName + "/"
                 + sessionBeanName + "!" + viewClassName;
     }
-    
-//    public String getJNDI2(){
-//        String appName = "";
-//        String moduleName = "SampleEJB3";
-//        String distinctName = "";
-//        String sessionBeanName = SystemManagement.class.getSimpleName();
-//        String viewClassName = SystemManagementRemote.class.getName()+"?stateful";
-//        return "ejb:" + appName + "/" + moduleName + "/" + distinctName + "/" 
-//                + sessionBeanName + "!" + viewClassName;
-//    }
-    
-    public InitialContext getInitialContex(){
+
+    public String getJNDI2() {
+        String appName = "";
+        String moduleName = "FinalEJB";
+        String distinctName = "";
+        String sessionBeanName = SystemManagement.class.getSimpleName();
+        String viewClassName = SystemManagementRemote.class.getName() + "?stateful";
+        return "ejb:" + appName + "/" + moduleName + "/" + distinctName + "/"
+                + sessionBeanName + "!" + viewClassName;
+    }
+
+    public InitialContext getInitialContex() {
         return ctx;
     }
 }
