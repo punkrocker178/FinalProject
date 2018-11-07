@@ -114,6 +114,6 @@ public class UI {
     }
 
     public void doubleDash() {
-        System.out.println("=================================");
+        System.out.println("\n=================================");
     }
 }

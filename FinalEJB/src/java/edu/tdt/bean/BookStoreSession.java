@@ -224,6 +224,15 @@ public class BookStoreSession implements BookStoreSessionRemote {
         }
         return booksFromReceipt;
     }
+    
+    public List<Book> getBooksFromStockInput(StockInput stockInput){
+        stockInput = entityManager.merge(stockInput);
+        List<Book> booksFromReceipt = new ArrayList<Book>();
+        for (Book book : stockInput.getBookCollection()) {
+            booksFromReceipt.add(book);
+        }
+        return booksFromReceipt;
+    }
 
     public List<Receipt> viewReceipt(int days) {
         return entityManager.createNativeQuery("SELECT order_id, date, username, total\n"
@@ -238,6 +247,21 @@ public class BookStoreSession implements BookStoreSessionRemote {
                 + "AND date <= to_date(:dateTo,'dd/MM/yyyy')", Receipt.class)
                 .setParameter("dateFrom", dateFrom).setParameter("dateTo", dateTo).getResultList();
         return receiptList;
+    }
+    
+    public List<StockInput> viewStockInput(int days) {
+        return entityManager.createNativeQuery("SELECT input_receipt_id, date, username, price\n"
+                + "FROM public.stock_input WHERE date >= current_date - integer '" + days + "'", StockInput.class).getResultList();
+    }
+
+    public List<StockInput> viewStockInput(String dateFrom, String dateTo) {
+        List<StockInput> stockReceiptList = entityManager.createNativeQuery(
+                "SELECT input_receipt_id, date, username, price\n"
+                + "FROM public.stock_input\n"
+                + "WHERE date>=to_date(:dateFrom,'dd/MM/yyyy')\n"
+                + "AND date <= to_date(:dateTo,'dd/MM/yyyy')", StockInput.class)
+                .setParameter("dateFrom", dateFrom).setParameter("dateTo", dateTo).getResultList();
+        return stockReceiptList;
     }
 
 }

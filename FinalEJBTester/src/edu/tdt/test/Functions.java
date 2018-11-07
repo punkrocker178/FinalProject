@@ -414,18 +414,21 @@ public class Functions {
         int total = 0;
         String strDateFrom, strDateTo;
         List<Receipt> receiptsList;
+        List<StockInput> stockReceiptsList;
         switch (choice) {
             case 1:
                 //7 days
                 receiptsList = storeBean.viewReceipt(7);
+                stockReceiptsList = storeBean.viewStockInput(7);
                 System.out.println("Viewing Report This Week");
-                viewReport(receiptsList);
+                viewReport(receiptsList, stockReceiptsList);
                 break;
             case 2:
                 //30 days
                 receiptsList = storeBean.viewReceipt(30);
+                stockReceiptsList = storeBean.viewStockInput(7);
                 System.out.println("Viewing Report This Month");
-                viewReport(receiptsList);
+                viewReport(receiptsList, stockReceiptsList);
                 break;
             case 3:
                 //Custom
@@ -434,43 +437,86 @@ public class Functions {
                 System.out.println("To date:");
                 strDateTo = sc.nextLine();
                 receiptsList = storeBean.viewReceipt(strDateFrom, strDateTo);
+                stockReceiptsList = storeBean.viewStockInput(strDateFrom, strDateTo);
                 System.out.println("Viewing Report From : " + strDateFrom + " To : "
                         + strDateTo);
-                viewReport(receiptsList);
+                viewReport(receiptsList, stockReceiptsList);
                 break;
         }
 
     }
 
-    private void viewReport(List<Receipt> receiptsList) {
+    private void viewReport(List<Receipt> receiptsList, List<StockInput> stockReceiptsList) {
         ui.doubleDash();
-        int total = 0;
-        List<List<Book>> receiptBook = new ArrayList();
-        List<Book> booksFromReceipt = new ArrayList();
-        List<Book> sortedBooks = new ArrayList();
 
+        List<List<Book>> receiptBook = new ArrayList();
+        List<List<Book>> stockReceiptBook = new ArrayList();
+        List<Book> booksFromReceipt = new ArrayList();
+        List<Book> booksFromStock = new ArrayList();
+        List<Book> sortedBooks = new ArrayList();
+        List<Book> sortedBooks2 = new ArrayList();
+
+        //Receipt
         System.out.printf(format, "ID", "Date", "Username", "Total");
         Collections.sort(receiptsList);
         for (Receipt receipt : receiptsList) {
             System.out.printf(format, receipt.getOrderId(), dateFormat.format(receipt.getDate()),
                     receipt.getUsername(),
                     new DecimalFormat("0,000 VND").format(receipt.getTotal()));
-            total += receipt.getTotal();
+
             booksFromReceipt = storeBean.getBooksFromReceipt(receipt);
             receiptBook.add(booksFromReceipt);
         }
-        System.out.printf(formatTotal, "Total income:", new DecimalFormat("0,000 VND").format(total));
+//        System.out.printf(formatTotal, "Total Income:", new DecimalFormat("0,000 VND").format(totalIn));
+
+        //Stock Receipt
         ui.doubleDash();
+        Collections.sort(stockReceiptsList);
+        for (StockInput receipt : stockReceiptsList) {
+            System.out.printf(format, receipt.getInputReceiptId(),
+                    dateFormat.format(receipt.getDate()),
+                    receipt.getUsername(),
+                    new DecimalFormat("0,000 VND").format(receipt.getPrice()));
+
+            booksFromStock = storeBean.getBooksFromStockInput(receipt);
+            stockReceiptBook.add(booksFromStock);
+        }
+//        System.out.printf(formatTotal, "Total Outcome:", new DecimalFormat("0,000 VND").format(totalOut));
+        ui.doubleDash();
+
         for (List<Book> list : receiptBook) {
             booksFromReceipt = list;
             for (Book book : booksFromReceipt) {
                 sortedBooks.add(book);
             }
         }
-        printSortedBooks(sortedBooks);
+
+        for (List<Book> list : stockReceiptBook) {
+            booksFromStock = list;
+            for (Book book : booksFromStock) {
+                sortedBooks2.add(book);
+            }
+        }
+
+        printSortedBooks(sortedBooks, sortedBooks2);
     }
 
-    private void printSortedBooks(List<Book> sortedBooks) {
+    private void printSortedBooks(List<Book> sortedBooks, List<Book> sortedBooks2) {
+        int netIncome = 0, totalIn = 0, totalOut = 0;
+        ui.doubleDash();
+        System.out.println("Books bought:");
+        System.out.printf(format, "ID", "Book Name", "Publisher", "Price");
+        Collections.sort(sortedBooks2);
+        for (Book book : sortedBooks2) {
+            System.out.printf(format, book.getBookId(),
+                    book.getBookName(),
+                    book.getPublisher(),
+                    new DecimalFormat("0,000 VND").format(book.getPrice()));
+            totalOut += book.getPrice();
+        }
+        ui.doubleDash();
+
+        ui.doubleDash();
         System.out.println("Books sold:");
         System.out.printf(format, "ID", "Book Name", "Publisher", "Price");
         Collections.sort(sortedBooks);
@@ -479,7 +525,13 @@ public class Functions {
                     book.getBookName(),
                     book.getPublisher(),
                     new DecimalFormat("0,000 VND").format(book.getPrice()));
+            totalIn += book.getPrice();
         }
+        netIncome = totalIn - totalOut;
+        System.out.println("Income: " + new DecimalFormat("0,000 VND").format(totalIn) + "\n"
+                + "Outcome:" + new DecimalFormat("0,000 VND").format(totalOut) + "\n"
+                + "Net Income:" + new DecimalFormat("0,000 VND").format(netIncome));
+        ui.doubleDash();
     }
 
     private void showAllAuthors(BookStoreSessionRemote storeBean) {
